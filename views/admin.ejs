@@ -1,38 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>የአስተዳዳሪ ገጽ</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #2c3e50; color: white; }
-        .summary { background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
-    <h1>የቁጥጥር ገጽ (Admin Panel)</h1>
-    
-    <div class="summary">
-        <h3>ጠቅላላ ተመዝጋቢ፡ <%= tickets.length %></h3>
-        <h3>ጠቅላላ የተሰበሰበ ብር፡ <%= total %> ETB</h3>
-    </div>
-
+    <h1>የተሸጡ ሎተሪዎች ዝርዝር</h1>
     <table>
-        <tr>
-            <th>ስም</th>
-            <th>ስልክ ቁጥር</th>
-            <th>የቲኬት ቁጥር</th>
-        </tr>
-        <% tickets.forEach(ticket => { %>
-        <tr>
-            <td><%= ticket.name %></td>
-            <td><%= ticket.phone %></td>
-            <td><%= ticket.ticketNumber %></td>
-        </tr>
-        <% }) %>
+        <thead>
+            <tr>
+                <th>ስም</th>
+                <th>ስልክ ቁጥር</th>
+                <th>የሎተሪ ቁጥር</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% tickets.forEach(function(ticket) { %>
+            <tr>
+                <td><%= ticket.name %></td>
+                <td><%= ticket.phone %></td>
+                <td><%= ticket.ticketNumber %></td>
+            </tr>
+            <% }); %>
+        </tbody>
     </table>
     <br>
-    <a href="/pick-winner" style="background: green; color: white; padding: 10px; text-decoration: none;">ዕድለኛውን ለመምረጥ ሂድ</a>
+    <a href="/">ወደ መግቢያ ገጽ ተመለስ</a>
 </body>
 </html>
