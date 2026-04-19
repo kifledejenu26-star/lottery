@@ -1,25 +1,38 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 const app = express();
 
-// 1. የዳታቤዝ ግንኙነት (MongoDB Atlas)
-// ፓስወርድህ ላይ ያለው @ ምልክት በ %40 ተተክቷል
 const dbURI = "mongodb+srv://kifledejenu26_db_user:kifle%401669339@cluster0.j2yp1l9.mongodb.net/ethiopia-lot?retryWrites=true&w=majority";
 
 mongoose.connect(dbURI)
-  .then(() => console.log('በጣም ደስ ይላል! ከ MongoDB Atlas ጋር ተገናኝተናል...'))
-  .catch((err) => console.log('የዳታቤዝ ግንኙነት ስህተት:', err.message));
+  .then(() => console.log('MongoDB Connected...'))
+  .catch(err => console.log('DB Error:', err.message));
 
-// 2. Middleware
+// Schema
+const ticketSchema = new mongoose.Schema({
+    name: String,
+    phone: String,
+    ticketNumber: Number
+});
+const Ticket = mongoose.model('Ticket', ticketSchema);
+
+app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Routes
-app.get('/', (req, res) => {
-    res.send('<h1>ሰላም! ዌብሳይቱ አሁን በንጽህና እየሰራ ነው።</h1><p>ዳታቤዙ መገናኘቱን በ Logs ላይ ያረጋግጡ።</p>');
+app.get('/', (req, res) => res.render('index'));
+
+app.post('/buy', async (req, res) => {
+    const { name, phone } = req.body;
+    const ticketNumber = Math.floor(100000 + Math.random() * 900000);
+    try {
+        const newTicket = new Ticket({ name, phone, ticketNumber });
+        await newTicket.save();
+        res.render('success', { name, ticketNumber });
+    } catch (err) {
+        res.send("ስህተት ተፈጥሯል");
+    }
 });
 
-// 4. ሰርቨር ማስነሻ
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`ሰርቨሩ በፖርት ${PORT} ላይ ስራ ጀምሯል...`);
-});
+app.listen(PORT, () => console.log(`Server on ${PORT}`));
