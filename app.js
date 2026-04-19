@@ -53,6 +53,22 @@ app.get('/admin', async (req, res) => {
     } catch (err) {
         res.status(500).send("መረጃ ማምጣት አልተቻለም");
     }
+  // የአሸናፊዎች ገጽ
+app.get('/winner', async (req, res) => {
+    try {
+        const allTickets = await Ticket.find();
+        if (allTickets.length === 0) {
+            return res.render('winner', { winner: null });
+        }
+        // ከዝርዝሩ ውስጥ አንዱን በድንገት መምረጥ
+        const randomIndex = Math.floor(Math.random() * allTickets.length);
+        const winner = allTickets[randomIndex];
+        
+        res.render('winner', { winner: winner });
+    } catch (err) {
+        res.status(500).send("ስህተት ተፈጥሯል");
+    }
+});
 });
 
 const PORT = process.env.PORT || 10000;
