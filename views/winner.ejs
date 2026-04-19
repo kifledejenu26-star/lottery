@@ -24,4 +24,40 @@
         <a href="/">ወደ መመዝገቢያ ገጽ ተመለስ</a>
     </div>
 </body>
+</html> 
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የዕለቱ አሸናፊ</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #fdfdfd; padding-top: 50px; }
+        .winner-card { 
+            border: 5px solid #ffc107; 
+            display: inline-block; 
+            padding: 40px; 
+            border-radius: 20px; 
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 { color: #28a745; font-size: 40px; }
+        .ticket { font-size: 50px; background: #ffc107; padding: 10px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="winner-card">
+        <h1>🎉 የእለቱ አድለኛ 🎉</h1>
+        <% if (winner) { %>
+            <p style="font-size: 24px;">እንኳን ደስ አሎት <strong><%= winner.name %></strong>!</p>
+            <p>የአሸናፊው ሎተሪ ቁጥር፦</p>
+            <div class="ticket"><%= winner.ticketNumber %></div>
+            <p>ስልክ ቁጥር፦ <%= winner.phone %></p>
+        <% } else { %>
+            <p>እስካሁን ምንም የተሸጠ ሎተሪ የለም።</p>
+        <% } %>
+        <br>
+        <a href="/" style="text-decoration: none; color: #007bff;">ወደ መግቢያ ተመለስ</a>
+    </div>
+</body>
 </html>
