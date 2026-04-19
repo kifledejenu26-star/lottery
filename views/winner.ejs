@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <title>የዕድለኛው ገጽ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 50px; background-color: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: inline-block; border-top: 8px solid #2ecc71; }
+        h1 { color: #2ecc71; font-size: 40px; }
+        p { font-size: 20px; color: #333; }
+        .winner-box { background: #e8faf0; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        a { text-decoration: none; color: #3498db; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎉 እንኳን ደስ አለዎት! 🎉</h1>
+        <div class="winner-box">
+            <p><strong>ዕድለኛው፡</strong> <%= winner.fullName %></p>
+            <p><strong>የቲኬት ቁጥር፡</strong> <%= winner.ticketNumber %></p>
+            <p><strong>ስልክ፡</strong> <%= winner.phoneNumber %></p>
+        </div>
+        <br>
+        <a href="/">ወደ መመዝገቢያ ገጽ ተመለስ</a>
+    </div>
+</body>
+</html>
