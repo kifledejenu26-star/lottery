@@ -3,36 +3,57 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 
+// 1. የዳታቤዝ ግንኙነት
 const dbURI = "mongodb+srv://kifledejenu26_db_user:kifle%401669339@cluster0.j2yp1l9.mongodb.net/ethiopia-lot?retryWrites=true&w=majority";
 
 mongoose.connect(dbURI)
-  .then(() => console.log('MongoDB Connected...'))
+  .then(() => console.log('MongoDB Connected Successfully!'))
   .catch(err => console.log('DB Error:', err.message));
 
-// Schema
+// 2. Schema Setup
 const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
-    ticketNumber: Number
+    ticketNumber: Number,
+    date: { type: Date, default: Date.now }
 });
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
+// 3. Middleware & View Engine
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views')); // ይህ መስመር ፎልደሩን እንዲያገኝ ያደርገዋል
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => res.render('index'));
+// 4. Routes
+// የመግቢያ ገጽ
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
+// ሎተሪ መግዣ
 app.post('/buy', async (req, res) => {
-    const { name, phone } = req.body;
-    const ticketNumber = Math.floor(100000 + Math.random() * 900000);
     try {
+        const { name, phone } = req.body;
+        const ticketNumber = Math.floor(100000 + Math.random() * 900000);
         const newTicket = new Ticket({ name, phone, ticketNumber });
         await newTicket.save();
         res.render('success', { name, ticketNumber });
     } catch (err) {
-        res.send("ስህተት ተፈጥሯል");
+        console.log(err);
+        res.status(500).send("ስህተት ተፈጥሯል");
+    }
+});
+
+// የአስተዳዳሪ ገጽ (የተሸጡ ሎተሪዎችን ለማየት)
+app.get('/admin', async (req, res) => {
+    try {
+        const tickets = await Ticket.find().sort({ date: -1 });
+        res.render('admin', { tickets });
+    } catch (err) {
+        res.status(500).send("መረጃ ማምጣት አልተቻለም");
     }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server on ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
