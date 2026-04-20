@@ -3,48 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ኢትዮጵያ ሎተሪ | ይሞክሩ ይሸለሙ</title>
+    <title>ኢትዮጵያ ሎተሪ | ቤትና መኪና</title>
     <style>
-        :root { --primary: #28a745; --secondary: #ffc107; --dark: #343a40; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f8f9fa; color: var(--dark); }
-        header { background: var(--dark); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--primary); }
-        .container { max-width: 400px; margin: 30px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { color: var(--primary); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        input:focus { border-color: var(--primary); outline: none; }
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #218838; transform: translateY(-2px); }
-        footer { text-align: center; margin-top: 50px; font-size: 14px; color: #777; }
-        .nav-links { margin-top: 15px; }
-        .nav-links a { color: var(--primary); text-decoration: none; margin: 0 10px; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; text-align: center; }
+        header { background: #1a1a1a; color: gold; padding: 20px; font-size: 24px; }
+        .prize-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px; }
+        .card { background: white; padding: 15px; border-radius: 15px; width: 280px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card img { width: 100%; border-radius: 10px; height: 180px; object-fit: cover; }
+        .reg-form { max-width: 400px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>🇪🇹 ኢትዮጵያ ሎተሪ</h1>
-</header>
+<header>🇪🇹 ኢትዮጵያ ብሄራዊ ሎተሪ</header>
 
-<div class="container">
-    <h2>ሎተሪዎን አሁኑኑ ይግዙ!</h2>
-    <form action="/buy" method="POST">
-        <label>ሙሉ ስም</label>
-        <input type="text" name="name" placeholder="ለምሳሌ፦ አበበ ካሳ" required>
-        
-        <label>ስልክ ቁጥር</label>
-        <input type="tel" name="phone" placeholder="09..." required>
-        
-        <button type="submit">እድሌን ልሞክር!</button>
-    </form>
-    
-    <div class="nav-links">
-        <a href="/about">ስለ እኛ</a> | <a href="/contact">ያግኙን</a>
+<div class="prize-container">
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1580587771525-78b9eda3b59b?w=400" alt="House">
+        <h3>ባለ 3 ክፍል ሪል ስቴት</h3>
+    </div>
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400" alt="Car">
+        <h3>የ2026 ዘመናዊ መኪና</h3>
     </div>
 </div>
 
-<footer>
-    &copy; 2026 ኢትዮጵያ ሎተሪ። መብቱ በህግ የተጠበቀ ነው።
-</footer>
+<div class="reg-form">
+    <h2>የእድል መመዝገቢያ</h2>
+    <form action="/buy" method="POST">
+        <input type="text" name="name" placeholder="ሙሉ ስም" required>
+        <input type="tel" name="phone" placeholder="ስልክ ቁጥር" required>
+        
+        <label>የሚመርጡት ሽልማት፦</label>
+        <select name="prizeType">
+            <option value="ቤት">ሪል ስቴት ቤት</option>
+            <option value="መኪና">ዘመናዊ መኪና</option>
+        </select>
+        
+        <p style="font-size: 13px; color: #666;">ክፍያ በቴሌብር (10 ብር) ወደ 09xxxxxxxx ከፈሉ በኋላ የደረሰኝ ቁጥሩን እዚህ ያስገቡ</p>
+        <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (Transaction ID)" required>
+        
+        <button type="submit">ይመዝገቡ</button>
+    </form>
+</div>
 
 </body>
 </html>
