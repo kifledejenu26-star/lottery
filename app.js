@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const app = express();
 
 // MongoDB ግንኙነት (የአንተን ሊንክ እዚህ ጋር ተካው)
-mongodb+srv://kifledejenu26_db_user:<db_kifle@1669339>@cluster0.j2yp1l9.mongodb.net/?appName=Cluster0
+const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
