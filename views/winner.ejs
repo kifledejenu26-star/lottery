@@ -1,14 +1,30 @@
 <!DOCTYPE html>
-<html>
-<body style="text-align:center; font-family:sans-serif;">
-    <h1>የዕለቱ አሸናፊ</h1>
-    <% if(winner) { %>
-        <div style="font-size: 24px; color: gold; background: #1a1a1a; padding: 20px; display: inline-block; border-radius: 10px;">
-            እንኳን ደስ አለህ <strong><%= winner.name %></strong>! <br>
-            የሎተሪ ቁጥርህ፦ <%= winner.ticketNumber %>
-        </div>
-    <% } else { %>
-        <p>ገና አሸናፊ አልተመረጠም</p>
-    <% } %>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <title>የእለቱ አሸናፊዎች</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+        .winner-box { background: gold; padding: 20px; margin: 10px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>🎉 የእለቱ እድለኛ አሸናፊዎች 🎉</h1>
+    <div id="winners-list">
+        <% if (winners.length > 0) { %>
+            <% winners.forEach(w => { %>
+                <div class="winner-box">
+                    <h3><%= w.name %></h3>
+                    <p>የቲኬት ቁጥር፦ <strong><%= w.ticketNumber %></strong></p>
+                    <p>ሽልማት፦ <%= w.prizeType %></p>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p>እስካሁን የታወጀ አሸናፊ የለም።</p>
+        <% } %>
+    </div>
+    <br>
+    <a href="/">ወደ ዋናው ገጽ ተመለስ</a>
 </body>
 </html>
