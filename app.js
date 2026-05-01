@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
 
-// MongoDB ግንኙነት - የተሻሻለ (Recommended Connection Options)
+// 1. MongoDB ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 
 mongoose.connect(dbURI)
@@ -14,51 +14,74 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// የዳታቤዝ ቅርጽ (Schema)
+// 2. የዳታቤዝ ቅርጽ (Schema)
 const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
     ticketNumber: Number,
     transactionId: String,
     prizeType: String,
+    status: { type: String, default: 'Pending' }, // ክፍያ ገና መሆኑን ለማወቅ
     date: { type: Date, default: Date.now }
 });
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
-// 1. ዋናው ገጽ (Home)
+// 3. መንገዶች (Routes)
+
+// ሀ. ዋናው ገጽ (Home)
 app.get('/', (req, res) => {
     res.render('index');
 });
 
-// 2. መመዝገቢያ (Buy)
+// ለ. ምዝገባ እና ወደ ክፍያ ገጽ መላክ
 app.post('/buy', async (req, res) => {
     try {
-        const { name, phone, transactionId, prizeType } = req.body;
+        const { name, phone, prizeType } = req.body;
         const ticketNumber = Math.floor(100000 + Math.random() * 900000);
         
-        const newTicket = new Ticket({ name, phone, ticketNumber, transactionId, prizeType });
-        await newTicket.save();
+        const newTicket = new Ticket({ 
+            name, 
+            phone, 
+            ticketNumber, 
+            prizeType 
+        });
         
-        res.render('success', { name, ticketNumber });
+        const savedTicket = await newTicket.save();
+        
+        // ምዝገባው ሲያልቅ የክፍያ ገጹን (payment.ejs) ይከፍታል
+        res.render('payment', { 
+            ticketNumber: ticketNumber, 
+            ticketId: savedTicket._id 
+        });
     } catch (err) {
-        console.error(err); // ስህተቱን ለማየት ይረዳል
-        res.status(500).send("ስህተት ተፈጥሯል");
+        console.error(err);
+        res.status(500).send("ምዝገባ ላይ ስህተት ተፈጥሯል");
     }
 });
 
-// 3. የአሸናፊዎች ገጽ
-app.get('/winner', async (req, res) => {
+// ሐ. የደረሰኝ ቁጥር (Transaction ID) መቀበያ
+app.post('/confirm-payment', async (req, res) => {
     try {
-        const allTickets = await Ticket.find();
-        const winner = allTickets.length > 0 ? allTickets[Math.floor(Math.random() * allTickets.length)] : null;
-        res.render('winner', { winner });
+        const { ticketId, transactionId } = req.body;
+        
+        // የደረሰኝ ቁጥሩን ዳታቤዝ ውስጥ ያዘምናል
+        await Ticket.findByIdAndUpdate(ticketId, { 
+            transactionId: transactionId,
+            status: 'Processing' // አሁን ወደ ማረጋገጫ ገብቷል
+        });
+        
+        // ስኬታማ መሆኑን ለተጠቃሚው ያሳያል
+        res.render('success', { 
+            name: "ተሳታፊ", 
+            ticketNumber: "ክፍያዎ ሲረጋገጥ መልእክት ይደርስዎታል" 
+        });
     } catch (err) {
-        res.status(500).send("የአሸናፊዎች ገጽ ላይ ስህተት ተፈጥሯል");
+        res.status(500).send("ክፍያ ማረጋገጥ ላይ ስህተት ተፈጥሯል");
     }
 });
 
-// 4. የአድሚን ገጽ (በፓስወርድ ጥበቃ)
+// መ. የአድሚን ገጽ (ሁሉንም ዝርዝር ለማየት)
 app.get('/admin', async (req, res) => {
     const { pass } = req.query;
     if (pass === "israel2026") { 
@@ -73,5 +96,17 @@ app.get('/admin', async (req, res) => {
     }
 });
 
+// ሰ. የአሸናፊዎች ገጽ
+app.get('/winner', async (req, res) => {
+    try {
+        const allTickets = await Ticket.find({ status: 'Confirmed' }); // የከፈሉትን ብቻ ለማየት
+        const winner = allTickets.length > 0 ? allTickets[Math.floor(Math.random() * allTickets.length)] : null;
+        res.render('winner', { winner });
+    } catch (err) {
+        res.status(500).send("ስህተት ተፈጥሯል");
+    }
+});
+
+// 4. ሰርቨር ማስጀመር
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
