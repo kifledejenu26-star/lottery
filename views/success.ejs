@@ -1,8 +1,29 @@
 <!DOCTYPE html>
-<html>
-<body style="text-align:center; padding-top:50px; font-family:sans-serif;">
-    <h1>ምዝገባዎ ተቀባይነት አግኝቷል! ✅</h1>
-    <p>መረጃዎ በአድሚን ተረጋግጦ በቅርቡ አሸናፊዎች ዝርዝር ላይ ይታያል።</p>
-    <a href="/">ወደ ዋናው ገጽ ተመለስ</a>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ምዝገባው ተሳክቷል</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f9f9f9; }
+        .success-card { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .ticket-box { background: #1a1a1a; color: #d4af37; padding: 20px; font-size: 24px; font-weight: bold; border-radius: 10px; margin: 20px 0; }
+        .check-mark { color: #28a745; font-size: 50px; }
+    </style>
+</head>
+<body>
+    <div class="success-card">
+        <div class="check-mark">✅</div>
+        <h1>ምዝገባዎ ተቀባይነት አግኝቷል!</h1>
+        <p>የእርስዎ የሎተሪ ቲኬት ቁጥር፦</p>
+        
+        <!-- የቲኬት ቁጥሩ እዚህ ጋር ይወጣል -->
+        <div class="ticket-box">
+            <%= ticketNumber %>
+        </div>
+
+        <p>መረጃዎ በአድሚን ተረጋግጦ በቅርቡ አሸናፊዎች ዝርዝር ላይ ይታያል። ቁጥርዎን በደንብ ይያዙ።</p>
+        <a href="/" style="color: #007bff; text-decoration: none; font-weight: bold;">ወደ ዋናው ገጽ ተመለስ</a>
+    </div>
 </body>
 </html>
