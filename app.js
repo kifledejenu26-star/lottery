@@ -1,11 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const multer = require('multer'); // አዲስ
-const path = require('path'); // አዲስ
+const multer = require('multer');
+const path = require('path');
 const app = express();
 
-// ምስል የሚቀመጥበት ቦታ (Storage)
+// 1. የፎቶ ማስቀመጫ ቦታ (Storage)
 const storage = multer.diskStorage({
     destination: './public/uploads/',
     filename: function(req, file, cb) {
@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// 2. MongoDB ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 mongoose.connect(dbURI).then(() => console.log('MongoDB connected!'));
 
@@ -21,18 +22,20 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// 3. ዳታቤዝ ሞዴል (Schema)
 const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
     ticketNumber: Number,
     transactionId: String,
     prizeType: String,
-    receiptImage: String, // ምስሉ የሚቀመጥበት ስም
+    receiptImage: String, // የፎቶው ስም የሚቀመጥበት
     status: { type: String, default: 'Pending' },
     date: { type: Date, default: Date.now }
 });
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
+// 4. መንገዶች (Routes)
 app.get('/', (req, res) => res.render('index'));
 
 app.post('/buy', async (req, res) => {
@@ -43,12 +46,11 @@ app.post('/buy', async (req, res) => {
     res.render('payment', { ticketNumber, ticketId: savedTicket._id });
 });
 
-// የደረሰኝ ቁጥር እና ምስል መቀበያ
 app.post('/confirm-payment', upload.single('receiptImage'), async (req, res) => {
     try {
         const { ticketId, transactionId } = req.body;
         const updateData = { transactionId, status: 'Processing' };
-        if (req.file) updateData.receiptImage = req.file.filename; // ምስሉ ካለ ስሙን መመዝገብ
+        if (req.file) updateData.receiptImage = req.file.filename;
 
         await Ticket.findByIdAndUpdate(ticketId, updateData);
         res.render('success');
