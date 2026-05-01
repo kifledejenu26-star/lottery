@@ -1,13 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head><title>Admin</title><style>table{width:100%; border-collapse:collapse;} td,th{border:1px solid #ddd; padding:10px;}</style></head>
-<body>
-    <h2>የተመዘገቡ ሰዎች ዝርዝር</h2>
-    <table>
-        <tr><th>ስም</th><th>ስልክ</th><th>ደረሰኝ ቁጥር</th><th>ሁኔታ</th></tr>
-        <% tickets.forEach(t => { %>
-            <tr><td><%= t.name %></td><td><%= t.phone %></td><td><%= t.transactionId %></td><td><%= t.status %></td></tr>
-        <% }) %>
-    </table>
-</body>
-</html>
+<table>
+    <tr>
+        <th>ስም</th>
+        <th>ስልክ</th>
+        <th>ቲኬት ቁጥር</th>
+        <th>ደረሰኝ ፎቶ</th>
+        <th>ሁኔታ</th>
+    </tr>
+    <% tickets.forEach(t => { %>
+        <tr>
+            <td><%= t.name %></td>
+            <td><%= t.phone %></td>
+            <td><%= t.ticketNumber %></td>
+            <td>
+                <% if(t.receiptImage) { %>
+                    <a href="/uploads/<%= t.receiptImage %>" target="_blank">ፎቶውን እይ</a>
+                <% } else { %> ፎቶ የለም <% } %>
+            </td>
+            <td><%= t.status %></td>
+        </tr>
+    <% }) %>
+</table>
