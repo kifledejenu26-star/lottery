@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የክፍያ መረጃ | ኢትዮጵያ ሎተሪ</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .payment-card { background: white; width: 350px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+        .header { background: #1a8a5f; color: white; padding: 15px; font-weight: bold; font-size: 18px; }
+        .info-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+        .label { color: #666; }
+        .value { font-weight: bold; color: #333; }
+        .status-tag { background: #fff3e0; color: #ff9800; padding: 2px 10px; border-radius: 5px; font-size: 14px; }
+        .buttons-container { padding: 20px; }
+        .pay-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; }
+        .telebirr { background: #007bff; }
+        .cbe-birr { background: #6f42c1; }
+        .pay-btn img { height: 30px; background: white; border-radius: 4px; padding: 2px; }
+        .input-section { padding: 0 20px 20px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
+<div class="payment-card">
+    <div class="header">Payment Information</div>
+    
+    <div class="info-row">
+        <span class="label">Total Payment</span>
+        <span class="value">10 ETB</span>
+    </div>
+    <div class="info-row">
+        <span class="label">Order Code</span>
+        <span class="value">LOT-<%= ticketNumber %></span>
+    </div>
+    <div class="info-row">
+        <span class="label">Status</span>
+        <span class="status-tag">New</span>
+    </div>
+
+    <div class="buttons-container">
+        <!-- የቴሌብር Deep Link (አፑን በቀጥታ እንዲከፍት) -->
+        <button class="pay-btn telebirr" onclick="window.location.href='tel:*127*1*0931136432*10#'">
+            Pay using <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Telebirr_Logo.png/220px-Telebirr_Logo.png" alt="telebirr">
+        </button>
+        <button class="pay-btn cbe-birr">
+            Pay using <img src="https://play-lh.googleusercontent.com/BfX6vP_mY5_V_G_9Z9Z9Z9Z9Z9Z9Z9Z" alt="CBE">
+        </button>
+    </div>
+
+    <form action="/confirm-payment" method="POST" class="input-section">
+        <input type="hidden" name="ticketId" value="<%= ticketId %>">
+        <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (Transaction ID)" required>
+        <button type="submit" class="submit-btn">ክፍያውን አረጋግጥ</button>
+    </form>
+</div>
+
+</body>
+</html>
