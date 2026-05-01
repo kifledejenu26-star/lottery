@@ -1,37 +1,13 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>የአስተዳዳሪ ገጽ</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-    </style>
-</head>
+<head><title>Admin</title><style>table{width:100%; border-collapse:collapse;} td,th{border:1px solid #ddd; padding:10px;}</style></head>
 <body>
-    <h1>የተሸጡ ሎተሪዎች ዝርዝር</h1>
+    <h2>የተመዘገቡ ሰዎች ዝርዝር</h2>
     <table>
-        <thead>
-            <tr>
-                <th>ስም</th>
-                <th>ስልክ ቁጥር</th>
-                <th>የሎተሪ ቁጥር</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% tickets.forEach(function(ticket) { %>
-            <tr>
-                <td><%= ticket.name %></td>
-                <td><%= ticket.phone %></td>
-                <td><%= ticket.ticketNumber %></td>
-            </tr>
-            <% }); %>
-        </tbody>
+        <tr><th>ስም</th><th>ስልክ</th><th>ደረሰኝ ቁጥር</th><th>ሁኔታ</th></tr>
+        <% tickets.forEach(t => { %>
+            <tr><td><%= t.name %></td><td><%= t.phone %></td><td><%= t.transactionId %></td><td><%= t.status %></td></tr>
+        <% }) %>
     </table>
-    <br>
-    <a href="/">ወደ መግቢያ ገጽ ተመለስ</a>
 </body>
 </html>
