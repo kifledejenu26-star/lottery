@@ -1,29 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Payment</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h3>ክፍያ መፈጸሚያ</h3>
-        <p>የቲኬት ቁጥር፡ <strong><%= ticketNumber %></strong></p>
-        <p>ወደ 0931136432 10 ብር በቴሌብር ይላኩ።</p>
-        
-        <form action="/confirm-payment" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="ticketId" value="<%= ticketId %>">
-            <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (TXN...)" required>
-            
-            <label>የደረሰኝ ፎቶ (Screenshot) ይጫኑ፡</label>
-            <input type="file" name="receiptImage" accept="image/*" required>
-            
-            <button type="submit">ክፍያውን አረጋግጥ</button>
-        </form>
+<div class="card" style="font-family: sans-serif; max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+    <h3>የክፍያ ማረጋገጫ</h3>
+    <p>የተመረጠው ሽልማት፦ <strong><%= prizeType %></strong></p>
+    <p>የቲኬት ቁጥር፦ <strong><%= ticketNumber %></strong></p>
+    
+    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0;">
+        <span style="display: block; font-size: 14px;">መክፈል ያለብዎት መጠን፡</span>
+        <span style="font-size: 28px; color: #d9534f; font-weight: bold;"><%= price %> ብር</span>
     </div>
-</body>
-</html>
+
+    <p>እባክዎን ክፍያውን ወደ <strong>0931136432</strong> በቴሌብር ይላኩ።</p>
+    
+    <form action="/confirm-payment" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="ticketId" value="<%= ticketId %>">
+        <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (Transaction ID)" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
+        <label>የደረሰኝ ፎቶ (Screenshot) ይጫኑ፦</label>
+        <input type="file" name="receiptImage" accept="image/*" required style="margin-bottom: 15px;">
+        <button type="submit" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">ክፍያውን አረጋግጥ</button>
+    </form>
+</div>
