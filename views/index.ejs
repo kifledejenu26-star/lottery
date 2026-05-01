@@ -3,53 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ኢትዮጵያ ሎተሪ | ቤትና መኪና</title>
+    <title>ኢትዮጵያ ብሄራዊ ሎተሪ | የቤትና መኪና እድል</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; text-align: center; }
-        header { background: #1a1a1a; color: gold; padding: 20px; font-size: 24px; }
-        .prize-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px; }
-        .card { background: white; padding: 15px; border-radius: 15px; width: 280px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .card img { width: 100%; border-radius: 10px; height: 180px; object-fit: cover; }
-        .reg-form { max-width: 400px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+        :root {
+            --primary: #d4af37; /* Gold */
+            --dark: #1a1a1a;
+            --success: #28a745;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        
+        header { 
+            background: var(--dark); 
+            color: var(--primary); 
+            padding: 30px 10px; 
+            font-size: 28px; 
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
+
+        .prize-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 25px; 
+            margin-top: 30px; 
+        }
+
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-10px); }
+        .card img { width: 100%; height: 220px; object-fit: cover; }
+        .card-content { padding: 20px; }
+        .card h3 { margin: 0; color: var(--dark); font-size: 22px; }
+
+        .reg-form { 
+            max-width: 500px; 
+            margin: 50px auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-top: 5px solid var(--primary);
+        }
+        h2 { color: var(--dark); margin-bottom: 25px; }
+
+        input, select, button { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 12px 0; 
+            border-radius: 12px; 
+            border: 2px solid #eee; 
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); }
+
+        .payment-info {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+            font-size: 14px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        button { 
+            background: var(--success); 
+            color: white; 
+            border: none; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        button:hover { background: #218838; }
+
+        footer { margin-top: 50px; padding: 20px; color: #888; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <header>🇪🇹 ኢትዮጵያ ብሄራዊ ሎተሪ</header>
 
-<div class="prize-container">
-    <!-- የቤቱ ካርድ -->
-    <div class="card">
-        <img src="/images/house.jpg" alt="3-room real estate">
-        <h3>ባለ 3 ክፍል ሪል ስቴት</h3>
+<div class="container">
+    <div class="prize-container">
+        <div class="card">
+            <img src="/images/house.jpg" alt="ሪል ስቴት">
+            <div class="card-content">
+                <h3>ባለ 3 ክፍል ዘመናዊ ሪል ስቴት</h3>
+            </div>
+        </div>
+        <div class="card">
+            <img src="/images/car.jpg" alt="መኪና">
+            <div class="card-content">
+                <h3>የ2026 ቶዮታ ሃይለክስ መኪና</h3>
+            </div>
+        </div>
     </div>
-    <!-- የመኪናው ካርድ -->
-    <div class="card">
-        <img src="/images/car.jpg" alt="የ2026 ዘመናዊ መኪና">
-        <h3>የ2026 ዘመናዊ መኪና</h3>
+
+    <div class="reg-form">
+        <h2>የእድል መመዝገቢያ ፎርም</h2>
+        <form action="/buy" method="POST">
+            <input type="text" name="name" placeholder="ሙሉ ስም" required>
+            <input type="tel" name="phone" placeholder="ስልክ ቁጥር (ለምሳሌ 09...)" required>
+            
+            <label style="display:block; text-align:left; margin-left:5px;">የሚመርጡት ሽልማት፡</label>
+            <select name="prizeType">
+                <option value="ቤት">ሪል ስቴት ቤት</option>
+                <option value="መኪና">ዘመናዊ መኪና</option>
+            </select>
+            
+            <div class="payment-info">
+                <strong>አከፋፈል፦</strong><br>
+                በቴሌብር 10 ብር ወደ <b>0931136432</b> ከላኩ በኋላ፣ የደረሰኝ ቁጥሩን (Transaction ID) ከታች ያስገቡ።
+            </div>
+            
+            <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (Transaction ID)" required>
+            
+            <button type="submit">አሁኑኑ ይሳተፉ</button>
+        </form>
     </div>
 </div>
 
-<div class="reg-form">
-    <h2>የእድል መመዝገቢያ</h2>
-    <form action="/buy" method="POST">
-        <input type="text" name="name" placeholder="ሙሉ ስም" required>
-        <input type="tel" name="phone" placeholder="ስልክ ቁጥር" required>
-        
-        <label>የሚመርጡት ሽልማት፦</label>
-        <select name="prizeType">
-            <option value="ቤት">ሪል ስቴት ቤት</option>
-            <option value="መኪና">ዘመናዊ መኪና</option>
-        </select>
-        
-        <p style="font-size: 13px; color: #666;">ክፍያ በቴሌብር (10 ብር) ወደ 0931136432 ከፈሉ በኋላ የደረሰኝ ቁጥሩን እዚህ ያስገቡ</p>
-        <input type="text" name="transactionId" placeholder="የደረሰኝ ቁጥር (Transaction ID)" required>
-        
-        <button type="submit">ይመዝገቡ</button>
-    </form>
-</div>
+<footer>&copy; 2026 ኢትዮጵያ ብሄራዊ ሎተሪ አስተዳደር። መብቱ የተጠበቀ ነው።</footer>
 
 </body>
 </html>
