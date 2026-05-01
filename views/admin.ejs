@@ -1,28 +1,52 @@
-<table border="1" style="width: 100%; border-collapse: collapse; text-align: left; font-family: sans-serif;">
-    <tr style="background: #f4f4f4;">
-        <th>ስም</th>
-        <th>ስልክ</th>
-        <th>የሎተሪ አይነት</th>
-        <th>ቲኬት ቁጥር</th>
-        <th>የደረሰኝ ፎቶ</th>
-        <th>ሁኔታ</th>
-    </tr>
-    <% tickets.forEach(t => { %>
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <title>የአድሚን ገጽ</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; font-family: sans-serif; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f4f4f4; }
+        .win-btn { background: #ffD700; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .win-btn:hover { background: #ffc107; }
+        .winner-label { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>የተመዘገቡ ተሳታፊዎች ዝርዝር</h2>
+    <table>
         <tr>
-            <td><%= t.name %></td>
-            <td><%= t.phone %></td>
-            <td>
-                <span style="padding: 4px 8px; border-radius: 4px; color: white; font-size: 12px; background: <%= t.prizeType === 'መኪና' ? '#007bff' : '#28a745' %>;">
-                    <%= t.prizeType %>
-                </span>
-            </td>
-            <td><%= t.ticketNumber %></td>
-            <td>
-                <% if(t.receiptImage) { %>
-                    <a href="/uploads/<%= t.receiptImage %>" target="_blank">ፎቶውን እይ</a>
-                <% } else { %> ፎቶ የለም <% } %>
-            </td>
-            <td><%= t.status %></td>
+            <th>ስም</th>
+            <th>ስልክ</th>
+            <th>አይነት</th>
+            <th>ቁጥር</th>
+            <th>ደረሰኝ</th>
+            <th>ሁኔታ</th>
+            <th>እርምጃ</th>
         </tr>
-    <% }) %>
-</table>
+        <% tickets.forEach(t => { %>
+            <tr>
+                <td><%= t.name %></td>
+                <td><%= t.phone %></td>
+                <td><%= t.prizeType %></td>
+                <td><%= t.ticketNumber %></td>
+                <td>
+                    <% if(t.receiptImage) { %>
+                        <a href="/uploads/<%= t.receiptImage %>" target="_blank">እይ</a>
+                    <% } %>
+                </td>
+                <td><%= t.status %></td>
+                <td>
+                    <% if (t.status !== 'Winner') { %>
+                        <form action="/make-winner/<%= t._id %>" method="POST">
+                            <button type="submit" class="win-btn">🏆 አሸናፊ አድርግ</button>
+                        </form>
+                    <% } else { %>
+                        <span class="winner-label">✅ አሸናፊ ሆኗል</span>
+                    <% } %>
+                </td>
+            </tr>
+        <% }) %>
+    </table>
+</body>
+</html>
