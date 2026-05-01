@@ -1,15 +1,21 @@
-<table>
-    <tr>
+<table border="1" style="width: 100%; border-collapse: collapse; text-align: left; font-family: sans-serif;">
+    <tr style="background: #f4f4f4;">
         <th>ስም</th>
         <th>ስልክ</th>
+        <th>የሎተሪ አይነት</th>
         <th>ቲኬት ቁጥር</th>
-        <th>ደረሰኝ ፎቶ</th>
+        <th>የደረሰኝ ፎቶ</th>
         <th>ሁኔታ</th>
     </tr>
     <% tickets.forEach(t => { %>
         <tr>
             <td><%= t.name %></td>
             <td><%= t.phone %></td>
+            <td>
+                <span style="padding: 4px 8px; border-radius: 4px; color: white; font-size: 12px; background: <%= t.prizeType === 'መኪና' ? '#007bff' : '#28a745' %>;">
+                    <%= t.prizeType %>
+                </span>
+            </td>
             <td><%= t.ticketNumber %></td>
             <td>
                 <% if(t.receiptImage) { %>
