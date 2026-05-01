@@ -3,8 +3,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
 
-// MongoDB ግንኙነት (የአንተን ሊንክ እዚህ ጋር ተካው)
+// MongoDB ግንኙነት - የተሻሻለ (Recommended Connection Options)
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
+
+mongoose.connect(dbURI)
+    .then(() => console.log('MongoDB connected successfully!'))
+    .catch(err => console.log('MongoDB Connection Error:', err));
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -15,8 +19,8 @@ const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
     ticketNumber: Number,
-    transactionId: String, // ለክፍያ
-    prizeType: String,     // ቤት ወይስ መኪና
+    transactionId: String,
+    prizeType: String,
     date: { type: Date, default: Date.now }
 });
 
@@ -38,25 +42,34 @@ app.post('/buy', async (req, res) => {
         
         res.render('success', { name, ticketNumber });
     } catch (err) {
+        console.error(err); // ስህተቱን ለማየት ይረዳል
         res.status(500).send("ስህተት ተፈጥሯል");
     }
 });
 
 // 3. የአሸናፊዎች ገጽ
 app.get('/winner', async (req, res) => {
-    const allTickets = await Ticket.find();
-    const winner = allTickets.length > 0 ? allTickets[Math.floor(Math.random() * allTickets.length)] : null;
-    res.render('winner', { winner });
+    try {
+        const allTickets = await Ticket.find();
+        const winner = allTickets.length > 0 ? allTickets[Math.floor(Math.random() * allTickets.length)] : null;
+        res.render('winner', { winner });
+    } catch (err) {
+        res.status(500).send("የአሸናፊዎች ገጽ ላይ ስህተት ተፈጥሯል");
+    }
 });
 
 // 4. የአድሚን ገጽ (በፓስወርድ ጥበቃ)
 app.get('/admin', async (req, res) => {
     const { pass } = req.query;
-    if (pass === "israel2026") { // ፓስወርድህ "israel2026" ነው
-        const tickets = await Ticket.find().sort({ date: -1 });
-        res.render('admin', { tickets });
+    if (pass === "israel2026") { 
+        try {
+            const tickets = await Ticket.find().sort({ date: -1 });
+            res.render('admin', { tickets });
+        } catch (err) {
+            res.status(500).send("ዳታቤዝ ማንበብ አልተቻለም");
+        }
     } else {
-        res.send("<h2>ይቅርታ፣ ገጹን ለመክፈት ፓስወርድ ያስፈልጋል!</h2><p>አጠቃቀም: /admin?pass=ፓስወርድህ</p>");
+        res.send("<h2>ይቅርታ፣ ገጹን ለመክፈት ፓስወርድ ያስፈልጋል!</h2><p>አጠቃቀም: /admin?pass=israel2026</p>");
     }
 });
 
