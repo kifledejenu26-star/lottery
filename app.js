@@ -1,18 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const multer = require('multer');
+const axios = require('axios');
 const path = require('path');
 const app = express();
 
-// የፎቶ ማስቀመጫ
-const storage = multer.diskStorage({
-    destination: './public/uploads/',
-    filename: function(req, file, cb) {
-        cb(null, 'receipt-' + Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// --- 1. ኮንፊገሬሽን ---
+// ያገኘኸውን Secret Key እዚህ አስገባ
+const CHAPA_SECRET_KEY = 'የአንተ_CHAPA_SECRET_KEY_እዚህ_ይግባ'; 
 
 // MongoDB ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
@@ -22,43 +17,74 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Schema
+// --- 2. ዳታ ሞዴል (Schema) ---
 const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
     ticketNumber: Number,
-    transactionId: String,
+    transactionId: String, // Chapa tx_ref
     prizeType: String,
-    receiptImage: String,
-    status: { type: String, default: 'Pending' },
+    status: { type: String, default: 'Pending' }, // Pending, Verified, Winner
     date: { type: Date, default: Date.now }
 });
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
-// --- መንገዶች (Routes) ---
+// --- 3. መንገዶች (Routes) ---
 
+// የመነሻ ገጽ
 app.get('/', (req, res) => res.render('index'));
 
+// ቲኬት ሲገዙ ወደ Chapa መላኪያ
 app.post('/buy', async (req, res) => {
     try {
         const { name, phone, prizeType } = req.body;
         const ticketNumber = Math.floor(100000 + Math.random() * 900000);
         let price = (prizeType === "መኪና") ? 50 : 100;
-        const newTicket = new Ticket({ name, phone, ticketNumber, prizeType });
-        const savedTicket = await newTicket.save();
-        res.render('payment', { ticketNumber, ticketId: savedTicket._id, price, prizeType });
-    } catch (err) { res.status(500).send("Error"); }
+        
+        const tx_ref = `tx-${ticketNumber}-${Date.now()}`;
+
+        const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+            amount: price,
+            currency: 'ETB',
+            email: 'israel@example.com', 
+            first_name: name,
+            phone_number: phone,
+            tx_ref: tx_ref,
+            callback_url: "https://lottery-d43d.onrender.com/verify-payment/" + tx_ref,
+            return_url: "https://lottery-d43d.onrender.com/success", 
+            "customization[title]": "የሎተሪ ክፍያ",
+            "customization[description]": `${prizeType} ቲኬት ቁጥር ${ticketNumber}`
+        }, {
+            headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
+        });
+
+        if (response.data.status === 'success') {
+            const newTicket = new Ticket({ name, phone, ticketNumber, prizeType, transactionId: tx_ref });
+            await newTicket.save();
+            res.redirect(response.data.data.checkout_url);
+        }
+    } catch (err) {
+        res.status(500).send("Chapa Error: " + err.message);
+    }
 });
 
-app.post('/confirm-payment', upload.single('receiptImage'), async (req, res) => {
+// ክፍያ ማረጋገጫ (Verification)
+app.get('/verify-payment/:id', async (req, res) => {
+    const tx_ref = req.params.id;
     try {
-        const { ticketId, transactionId } = req.body;
-        const updateData = { transactionId, status: 'Processing' };
-        if (req.file) updateData.receiptImage = req.file.filename;
-        const updatedTicket = await Ticket.findByIdAndUpdate(ticketId, updateData, { new: true });
-        res.render('success', { ticketNumber: updatedTicket.ticketNumber });
-    } catch (err) { res.status(500).send("Error"); }
+        const response = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+            headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
+        });
+
+        if (response.data.status === 'success') {
+            await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' });
+            res.render('success');
+        }
+    } catch (err) { res.status(500).send("Verification Failed"); }
 });
+
+// ስኬታማ ገጽ
+app.get('/success', (req, res) => res.render('success'));
 
 // አሸናፊዎችን ማሳያ
 app.get('/winner', async (req, res) => {
@@ -77,7 +103,7 @@ app.get('/admin', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
-// አንድን ሰው አሸናፊ ማድረጊያ መንገድ
+// አሸናፊ መምረጫ
 app.post('/make-winner/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
