@@ -7,7 +7,7 @@ const app = express();
 
 // --- 1. ኮንፊገሬሽን ---
 // ያገኘኸውን Secret Key እዚህ አስገባ
-const CHAPA_SECRET_KEY = 'የአንተ_CHAPA_SECRET_KEY_እዚህ_ይግባ'; 
+CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz
 
 // MongoDB ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
