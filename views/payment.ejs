@@ -1,26 +1,62 @@
-<div class="payment-card" style="font-family: sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 450px; margin: auto;">
-    <h2 style="background: #2e7d32; color: white; padding: 10px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0;">Payment Information</h2>
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የክፍያ መረጃ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .payment-card { background: white; width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #2e7d32; color: white; padding: 20px; font-size: 20px; font-weight: bold; }
+        .info-row { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #eee; color: #555; }
+        .info-row strong { color: #000; }
+        .payment-options { padding: 20px; }
+        .pay-btn { display: flex; align-items: center; justify-content: center; padding: 15px; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border: none; width: 100%; color: white; font-weight: bold; font-size: 16px; transition: transform 0.2s; }
+        .pay-btn:active { transform: scale(0.98); }
+        .telebirr { background: #2196f3; }
+        .cbebirr { background: #6a1b9a; }
+        .logo-img { height: 25px; margin-left: 10px; border-radius: 4px; }
+        
+        /* ቅድም የነበረውን የፎቶ መጫኛ ለጊዜው ደብቀነዋል (ወይም ከስር እንዲሆን አድርገነዋል) */
+        .confirm-section { padding: 20px; background: #fffde7; border-top: 2px dashed #ffd54f; }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <div class="header">Payment Information</div>
     
-    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+    <div class="info-row">
         <span>Total Payment</span>
         <strong><%= price %> ETB</strong>
     </div>
-    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+    
+    <div class="info-row">
         <span>Ticket Number</span>
         <strong><%= ticketNumber %></strong>
     </div>
 
-    <div style="margin-top: 20px;">
-        <!-- የቴሌብር በተን -->
-        <div style="background: #2196f3; color: white; padding: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 10px;">
-            <span>Pay using</span>
-            <img src="/images/telebirr-logo.png" alt="Telebirr" style="height: 30px; margin-left: 10px;">
-        </div>
+    <div class="payment-options">
+        <button class="pay-btn telebirr" onclick="alert('ወደ 0931136432 በቴሌብር ይክፈሉ')">
+            Pay using <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Telebirr_Logo.png/640px-Telebirr_Logo.png" class="logo-img" alt="Tele">
+        </button>
 
-        <!-- የሲቤ ብር በተን -->
-        <div style="background: #9c27b0; color: white; padding: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-            <span>Pay using</span>
-            <img src="/images/cbebirr-logo.png" alt="CBEBirr" style="height: 30px; margin-left: 10px;">
-        </div>
+        <button class="pay-btn cbebirr" onclick="alert('ወደ 393837 በሲቤ ብር ይክፈሉ')">
+            Pay using <img src="https://pbs.twimg.com/profile_images/1455513473210355716/09rM-yUu_400x400.jpg" class="logo-img" alt="CBE">
+        </button>
+    </div>
+
+    <!-- ከከፈሉ በኋላ ደረሰኝ የሚልኩበት ክፍል -->
+    <div class="confirm-section">
+        <p style="font-size: 13px; margin-top: 0;">ከከፈሉ በኋላ Transaction ID እና ደረሰኝ እዚህ ይላኩ፦</p>
+        <form action="/confirm-payment" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="ticketId" value="<%= ticketId %>">
+            <input type="text" name="transactionId" placeholder="Transaction ID" required style="width: 90%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="file" name="receiptImage" accept="image/*" required style="font-size: 12px;">
+            <button type="submit" style="background: #4caf50; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; margin-top: 10px; cursor: pointer;">አረጋግጥ</button>
+        </form>
     </div>
 </div>
+
+</body>
+</html>
