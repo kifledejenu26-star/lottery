@@ -6,8 +6,8 @@ const path = require('path');
 const app = express();
 
 // --- 1. ኮንፊገሬሽን ---
-// ያገኘኸውን Secret Key እዚህ አስገባ
-CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz
+// በትክክል የተስተካከለ የ Chapa Secret Key
+const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
 
 // MongoDB ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
