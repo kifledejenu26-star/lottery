@@ -1,12 +1,21 @@
 {
-  "name": "lottery",
+  "name": "lottery-app",
   "version": "1.0.0",
+  "description": "Israel Lottery System with Chapa Payment API Integration",
   "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.0.0",
-    "body-parser": "^1.20.1",
+    "axios": "^1.6.8",
+    "body-parser": "^1.20.2",
     "ejs": "^3.1.9",
-    "multer": "^1.4.5-lts.1"
-  }
+    "express": "^4.19.2",
+    "mongoose": "^8.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Israel",
+  "license": "ISC"
 }
