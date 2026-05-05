@@ -6,8 +6,10 @@ const path = require('path');
 const app = express();
 
 // --- 1. ኮንፊገሬሽን ---
+// የ Chapa Test Secret Key
 const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
 
+// የ MongoDB ዳታቤዝ ግንኙነት
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 mongoose.connect(dbURI).then(() => console.log('MongoDB connected!'));
 
@@ -30,6 +32,7 @@ const Ticket = mongoose.model('Ticket', ticketSchema);
 
 // --- 3. መንገዶች (Routes) ---
 
+// ዋና ገጽ
 app.get('/', (req, res) => res.render('index'));
 
 // ክፍያ ማስጀመር
@@ -48,6 +51,7 @@ app.post('/buy', async (req, res) => {
             first_name: name,
             phone_number: cleanPhone,
             tx_ref: tx_ref,
+            // Render ሊንክህ ትክክል መሆኑን አረጋግጥ
             callback_url: "https://lottery-d43d.onrender.com/verify-payment/" + tx_ref,
             return_url: "https://lottery-d43d.onrender.com/success", 
             "customization[title]": "የሎተሪ ክፍያ",
@@ -82,7 +86,8 @@ app.get('/verify-payment/:id', async (req, res) => {
                 { new: true }
             );
             if (updated) {
-                res.render('success');
+                // ፋይሉ (success.ejs) ባይኖርህ እንኳ ይህ ፅሁፍ ይታያል
+                return res.send("<h1>ክፍያው ተሳክቷል!</h1><p>ቲኬትዎ ተመዝግቧል።</p><a href='/'>ወደ ዋናው ገጽ ተመለስ</a>");
             } else {
                 res.status(404).send("ትኬቱ በዳታቤዝ ውስጥ አልተገኘም");
             }
@@ -109,7 +114,7 @@ app.get('/pick-random-winner', async (req, res) => {
     } catch (err) { res.status(500).send("Error picking winner"); }
 });
 
-// ሁሉንም የድሮ ዳታ ማጽጃ (አንድ ጊዜ ብቻ ተጠቀምበት)
+// የድሮ ዳታ ማጽጃ
 app.get('/clear-all-data', async (req, res) => {
     const { pass } = req.query;
     if (pass === "israel2026") {
@@ -118,8 +123,7 @@ app.get('/clear-all-data', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
-app.get('/success', (req, res) => res.render('success'));
-
+// አሸናፊዎች የሚታዩበት ገጽ
 app.get('/winner', async (req, res) => {
     try {
         const winners = await Ticket.find({ status: 'Winner' });
@@ -127,6 +131,7 @@ app.get('/winner', async (req, res) => {
     } catch (err) { res.status(500).send("Error fetching winners"); }
 });
 
+// አድሚን ገጽ
 app.get('/admin', async (req, res) => {
     const { pass } = req.query;
     if (pass === "israel2026") {
@@ -135,6 +140,7 @@ app.get('/admin', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
+// በአካል አሸናፊ መምረጥ
 app.get('/make-winner/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
