@@ -34,10 +34,7 @@ app.get('/', (req, res) => res.render('index'));
 app.post('/buy', async (req, res) => {
     try {
         const { name, phone, prizeType } = req.body;
-        
-        // ስልክ ቁጥሩን ማጽዳት (ክፍተቶችን ማጥፋት)
         const cleanPhone = phone.replace(/\s+/g, '');
-        
         const ticketNumber = Math.floor(100000 + Math.random() * 900000);
         let price = (prizeType === "መኪና") ? 50 : 100;
         const tx_ref = `tx-${ticketNumber}-${Date.now()}`;
@@ -47,7 +44,7 @@ app.post('/buy', async (req, res) => {
             currency: 'ETB',
             email: 'israel@gmail.com', 
             first_name: name,
-            phone_number: cleanPhone, // የጸዳ ስልክ ቁጥር
+            phone_number: cleanPhone,
             tx_ref: tx_ref,
             callback_url: "https://lottery-d43d.onrender.com/verify-payment/" + tx_ref,
             return_url: "https://lottery-d43d.onrender.com/success", 
@@ -63,7 +60,6 @@ app.post('/buy', async (req, res) => {
             res.redirect(response.data.data.checkout_url);
         }
     } catch (err) {
-        // ስህተቱ ምን እንደሆነ Render Logs ላይ ያሳየናል
         if (err.response) {
             console.error("Chapa Detailed Error:", err.response.data);
             res.status(400).send(`Chapa Error: ${JSON.stringify(err.response.data)}`);
@@ -73,6 +69,7 @@ app.post('/buy', async (req, res) => {
     }
 });
 
+// ክፍያ ሲሳካ Chapa በራሱ የሚጠራው መንገድ
 app.get('/verify-payment/:id', async (req, res) => {
     const tx_ref = req.params.id;
     try {
@@ -80,11 +77,14 @@ app.get('/verify-payment/:id', async (req, res) => {
             headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
         });
 
-        if (response.data.status === 'success') {
+        if (response.data.status === 'success' || response.data.data.status === 'success') {
             await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' });
             res.render('success');
         }
-    } catch (err) { res.status(500).send("Verification Failed"); }
+    } catch (err) { 
+        console.error("Verification Error:", err.message);
+        res.status(500).send("Verification Failed"); 
+    }
 });
 
 app.get('/success', (req, res) => res.render('success'));
@@ -104,7 +104,8 @@ app.get('/admin', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
-app.post('/make-winner/:id', async (req, res) => {
+// አሸናፊ መምረጫ (ወደ GET ቀይሬዋለሁ ለመጠቀም እንዲቀልህ)
+app.get('/make-winner/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
         res.redirect('/admin?pass=israel2026');
