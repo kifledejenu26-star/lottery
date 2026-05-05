@@ -3,25 +3,30 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const path = require('path');
+const { Infobip, AuthType } = require('@infobip-api-client/sdk'); 
+
 const app = express();
 
 // --- 1. ኮንፊገሬሽን ---
-// Chapa Secret Key
+
+// Infobip መረጃዎች (በሰጠኸኝ መሰረት ተስተካክሏል)
+const INFOBIP_API_KEY = "d9aab6e1c252ed1226bfd82c94ab929f-60ef815d-7148-41e3-9fba-299c09c3d527";
+const INFOBIP_BASE_URL = "https://m9xgn9.api.infobip.com"; 
+
 const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
 
-// Render ላይ የሞላኸውን MONGODB_URI ይጠቀማል
+// Infobip Setup
+const infobip = new Infobip({
+    baseUrl: INFOBIP_BASE_URL,
+    apiKey: INFOBIP_API_KEY,
+    authType: AuthType.ApiKey,
+});
+
+// MongoDB Setup
 const dbURI = process.env.MONGODB_URI;
-
-if (!dbURI) {
-    console.error("ERROR: MONGODB_URI is not defined in Render Environment Variables!");
-}
-
 mongoose.connect(dbURI)
     .then(() => console.log('✅ MongoDB connected successfully!'))
-    .catch(err => {
-        console.error('❌ MongoDB connection error:', err.message);
-        console.log('ጠቃሚ ምክር፦ Render ላይ የሞላኸው ፓስወርድ እና Username ትክክል መሆኑን አረጋግጥ።');
-    });
+    .catch(err => console.error('❌ MongoDB connection error:', err.message));
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -42,10 +47,8 @@ const Ticket = mongoose.model('Ticket', ticketSchema);
 
 // --- 3. መንገዶች (Routes) ---
 
-// ዋና ገጽ
 app.get('/', (req, res) => res.render('index'));
 
-// ክፍያ ማስጀመር
 app.post('/buy', async (req, res) => {
     try {
         const { name, phone, prizeType } = req.body;
@@ -75,25 +78,30 @@ app.post('/buy', async (req, res) => {
             res.redirect(response.data.data.checkout_url);
         }
     } catch (err) {
-        console.error("Chapa Initialize Error:", err.message);
         res.status(500).send("Chapa Error: " + err.message);
     }
 });
 
-// ክፍያ ሲሳካ የሚታይ ገጽ (ነጭ ስክሪን እንዳይሆን)
-app.get('/success', (req, res) => {
-    res.send(`
-        <div style="text-align:center; margin-top:100px; font-family:sans-serif;">
-            <h1 style="color:green; font-size: 60px;">✔️</h1>
-            <h1 style="color:#333;">ክፍያዎ ተሳክቷል!</h1>
-            <p style="color:#666; font-size:18px;">ወደ ሎተሪው በሰላም ገብተዋል። መልካም ዕድል!</p>
-            <br>
-            <a href="/" style="padding:12px 25px; background:#007bff; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">ወደ ዋናው ገጽ ተመለስ</a>
-        </div>
-    `);
+app.get('/success', async (req, res) => {
+    try {
+        const lastTicket = await Ticket.findOne().sort({ date: -1 });
+        res.send(`
+            <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
+                <h1 style="color:green; font-size: 50px;">✔️</h1>
+                <h1 style="color:#333;">ክፍያዎ ተሳክቷል!</h1>
+                <div style="background:#f4f4f4; padding:20px; border-radius:10px; display:inline-block; text-align:left; border: 1px solid #ddd;">
+                   <p><strong>ስም፦</strong> ${lastTicket.name}</p>
+                   <p><strong>የትኬት ቁጥር፦</strong> <span style="font-size:20px; color:#007bff;">#${lastTicket.ticketNumber}</span></p>
+                   <p><strong>ሽልማት፦</strong> ${lastTicket.prizeType}</p>
+                </div>
+                <p style="color:blue; margin-top:20px;">የትኬት ቁጥሩ በ SMS ወደ ስልክዎ ይላካል!</p>
+                <br><br>
+                <a href="/" style="padding:12px 25px; background:#007bff; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">ወደ ዋናው ገጽ ተመለስ</a>
+            </div>
+        `);
+    } catch (e) { res.redirect('/'); }
 });
 
-// Chapa ክፍያውን ሲያረጋግጥ ዳታቤዝ ላይ የሚመዘገብበት (Webhook)
 app.all('/verify-payment/:id', async (req, res) => {
     const tx_ref = req.params.id;
     try {
@@ -102,54 +110,32 @@ app.all('/verify-payment/:id', async (req, res) => {
         });
 
         if (response.data.status === 'success' && response.data.data.status === 'success') {
-            await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' });
+            const ticket = await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' }, { new: true });
+            
+            if (ticket) {
+                try {
+                    await infobip.channels.sms.send({
+                        messages: [{
+                            from: "Lottery",
+                            destinations: [{ to: ticket.phone }],
+                            text: `ሰላም ${ticket.name}፣ የሎተሪ ትኬት ቁጥርዎ #${ticket.ticketNumber} ነው። መልካም ዕድል!`
+                        }]
+                    });
+                    console.log("✅ SMS sent to " + ticket.phone);
+                } catch (smsErr) {
+                    console.error("❌ SMS Error:", smsErr.message);
+                }
+            }
             return res.status(200).send("Verified");
-        } else {
-            return res.status(400).send("Verification Failed");
         }
-    } catch (err) { 
-        console.error("Verification Error:", err.message);
-        res.status(500).send("Error"); 
-    }
-});
-
-// ዕጣ ማውጫ (Admin Only)
-app.get('/pick-random-winner', async (req, res) => {
-    try {
-        const verifiedTickets = await Ticket.find({ status: 'Verified' });
-        if (verifiedTickets.length === 0) {
-            return res.send("<script>alert('ክፍያ የፈጸመ ሰው አልተገኘም!'); window.location.href='/admin?pass=israel2026';</script>");
-        }
-        const randomIndex = Math.floor(Math.random() * verifiedTickets.length);
-        const winner = verifiedTickets[randomIndex];
-        await Ticket.findByIdAndUpdate(winner._id, { status: 'Winner' });
-        res.send(`<script>alert('አሸናፊው ተመርጧል: ${winner.name}'); window.location.href='/admin?pass=israel2026';</script>`);
     } catch (err) { res.status(500).send("Error"); }
 });
 
-// አድሚን ገጽ
 app.get('/admin', async (req, res) => {
     const { pass } = req.query;
     if (pass === "israel2026") {
         const tickets = await Ticket.find().sort({ date: -1 });
         res.render('admin', { tickets });
-    } else { res.send("Password Required"); }
-});
-
-// አሸናፊዎች ማሳያ
-app.get('/winner', async (req, res) => {
-    try {
-        const winners = await Ticket.find({ status: 'Winner' });
-        res.render('winner', { winners });
-    } catch (err) { res.status(500).send("Error"); }
-});
-
-// ዳታ ማጽጃ
-app.get('/clear-all-data', async (req, res) => {
-    const { pass } = req.query;
-    if (pass === "israel2026") {
-        await Ticket.deleteMany({});
-        res.send("ሁሉም መረጃዎች በትክክል ጠፍተዋል!");
     } else { res.send("Password Required"); }
 });
 
