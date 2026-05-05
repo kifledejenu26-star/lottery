@@ -2,73 +2,50 @@
 <html lang="am">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>የአድሚን ገጽ</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; padding: 20px; }
-        h2 { text-align: center; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: #007bff; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .win-btn { 
-            background: #ffD700; 
-            color: #333; 
-            text-decoration: none; 
-            padding: 8px 15px; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            display: inline-block;
-            transition: 0.3s;
-        }
-        .win-btn:hover { background: #e6c200; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .winner-label { color: #28a745; font-weight: bold; font-size: 1.1em; }
-        .status-verified { color: #007bff; font-weight: bold; }
-        .status-pending { color: #dc3545; }
+        .draw-btn { background: #28a745; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: block; width: fit-content; margin: 20px auto; }
+        .win-btn { background: #ffD700; color: #333; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .winner-label { color: #28a745; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h2>የተመዘገቡ ተሳታፊዎች ዝርዝር</h2>
+    <h2 style="text-align: center;">የተሳታፊዎች ዝርዝር</h2>
+
+    <!-- አውቶማቲክ ዕጣ ማውጫ ቁልፍ -->
+    <a href="/pick-random-winner" class="draw-btn" onclick="return confirm('ሲስተሙ በዘፈቀደ ዕጣ እንዲያወጣ ትፈልጋለህ?')">
+        🎲 በዘፈቀደ ዕጣ አውጣ
+    </a>
+
     <table>
-        <thead>
+        <tr>
+            <th>ስም</th>
+            <th>ስልክ</th>
+            <th>አይነት</th>
+            <th>ቲኬት ቁጥር</th>
+            <th>ሁኔታ</th>
+            <th>እርምጃ</th>
+        </tr>
+        <% tickets.forEach(t => { %>
             <tr>
-                <th>ስም</th>
-                <th>ስልክ</th>
-                <th>አይነት</th>
-                <th>የቲኬት ቁጥር</th>
-                <th>ሁኔታ</th>
-                <th>እርምጃ</th>
+                <td><%= t.name %></td>
+                <td><%= t.phone %></td>
+                <td><%= t.prizeType %></td>
+                <td>#<%= t.ticketNumber %></td>
+                <td><%= t.status %></td>
+                <td>
+                    <% if (t.status !== 'Winner') { %>
+                        <a href="/make-winner/<%= t._id %>" class="win-btn">🏆 መርጠህ አሸንፍ</a>
+                    <% } else { %>
+                        <span class="winner-label">✅ አሸናፊ ሆኗል</span>
+                    <% } %>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <% if (tickets.length > 0) { %>
-                <% tickets.forEach(t => { %>
-                    <tr>
-                        <td><%= t.name %></td>
-                        <td><%= t.phone %></td>
-                        <td><%= t.prizeType %></td>
-                        <td><strong>#<%= t.ticketNumber %></strong></td>
-                        <td class="<%= t.status === 'Verified' ? 'status-verified' : 'status-pending' %>">
-                            <%= t.status %>
-                        </td>
-                        <td>
-                            <% if (t.status !== 'Winner') { %>
-                                <!-- እዚህ ጋር POST በነበረው ፋንታ በቀጥታ ወደ GET ሊንክ ቀይረነዋል -->
-                                <a href="/make-winner/<%= t._id %>" class="win-btn" onclick="return confirm('እርግጠኛ ነህ ይህ ሰው አሸናፊ እንዲሆን ትፈልጋለህ?')">
-                                    🏆 አሸናፊ አድርግ
-                                </a>
-                            <% } else { %>
-                                <span class="winner-label">✅ አሸናፊ ሆኗል</span>
-                            <% } %>
-                        </td>
-                    </tr>
-                <% }) %>
-            <% } else { %>
-                <tr>
-                    <td colspan="6">እስካሁን ምንም የተመዘገበ ተሳታፊ የለም።</td>
-                </tr>
-            <% } %>
-        </tbody>
+        <% }) %>
     </table>
 </body>
 </html>
