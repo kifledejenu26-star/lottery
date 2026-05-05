@@ -1,7 +1,7 @@
 {
   "name": "lottery-app",
   "version": "1.0.0",
-  "description": "Lottery management system",
+  "description": "Lottery management system with SMS",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
