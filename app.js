@@ -5,14 +5,15 @@ const axios = require('axios');
 const path = require('path');
 const app = express();
 
-// ከላይ ካለው ኮንፊገሬሽን ስር ይሄን ተካው
+// --- 1. ኮንፊገሬሽን ---
+const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
+
+// Render ላይ የሞላኸውን MONGODB_URI ይጠቀማል፣ ከሌለ ወደ fallback ይሄዳል
 const dbURI = process.env.MONGODB_URI || 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 
 mongoose.connect(dbURI)
     .then(() => console.log('MongoDB connected successfully!'))
     .catch(err => console.error('MongoDB connection error:', err));
-const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
-mongoose.connect(dbURI).then(() => console.log('MongoDB connected!'));
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -35,6 +36,7 @@ const Ticket = mongoose.model('Ticket', ticketSchema);
 
 app.get('/', (req, res) => res.render('index'));
 
+// ክፍያ ማስጀመር
 app.post('/buy', async (req, res) => {
     try {
         const { name, phone, prizeType } = req.body;
@@ -69,7 +71,7 @@ app.post('/buy', async (req, res) => {
     }
 });
 
-// የነጭ ስክሪን ችግርን ለመፍታት የተስተካከለ (Success Page)
+// ክፍያ ማረጋገጫ ገጽ (ስክሪኑ ነጭ እንዳይሆን የተስተካከለ)
 app.get('/success', (req, res) => {
     res.send(`
         <div style="text-align:center; margin-top:100px; font-family:sans-serif;">
@@ -82,7 +84,7 @@ app.get('/success', (req, res) => {
     `);
 });
 
-// የክፍያ ማረጋገጫ (Verification)
+// Chapa ክፍያውን ሲያረጋግጥ ዳታቤዝ ላይ የሚመዘገብበት መንገድ
 app.all('/verify-payment/:id', async (req, res) => {
     const tx_ref = req.params.id;
     try {
@@ -102,6 +104,7 @@ app.all('/verify-payment/:id', async (req, res) => {
     }
 });
 
+// ዕጣ ማውጫ
 app.get('/pick-random-winner', async (req, res) => {
     try {
         const verifiedTickets = await Ticket.find({ status: 'Verified' });
@@ -112,24 +115,10 @@ app.get('/pick-random-winner', async (req, res) => {
         const winner = verifiedTickets[randomIndex];
         await Ticket.findByIdAndUpdate(winner._id, { status: 'Winner' });
         res.send(`<script>alert('አሸናፊው ተመርጧል: ${winner.name}'); window.location.href='/admin?pass=israel2026';</script>`);
-    } catch (err) { res.status(500).send("Error"); }
+    } catch (err) { res.status(500).send("Error picking winner"); }
 });
 
-app.get('/clear-all-data', async (req, res) => {
-    const { pass } = req.query;
-    if (pass === "israel2026") {
-        await Ticket.deleteMany({});
-        res.send("ሁሉም መረጃዎች በትክክል ጠፍተዋል!");
-    } else { res.send("Password Required"); }
-});
-
-app.get('/winner', async (req, res) => {
-    try {
-        const winners = await Ticket.find({ status: 'Winner' });
-        res.render('winner', { winners });
-    } catch (err) { res.status(500).send("Error"); }
-});
-
+// አድሚን ገጽ
 app.get('/admin', async (req, res) => {
     const { pass } = req.query;
     if (pass === "israel2026") {
@@ -138,11 +127,21 @@ app.get('/admin', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
-app.get('/make-winner/:id', async (req, res) => {
+// አሸናፊዎች ማሳያ
+app.get('/winner', async (req, res) => {
     try {
-        await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
-        res.redirect('/admin?pass=israel2026');
+        const winners = await Ticket.find({ status: 'Winner' });
+        res.render('winner', { winners });
     } catch (err) { res.status(500).send("Error"); }
+});
+
+// ዳታ ማጽጃ (አንድ ጊዜ ብቻ ተጠቀም)
+app.get('/clear-all-data', async (req, res) => {
+    const { pass } = req.query;
+    if (pass === "israel2026") {
+        await Ticket.deleteMany({});
+        res.send("ሁሉም መረጃዎች በትክክል ጠፍተዋል!");
+    } else { res.send("Password Required"); }
 });
 
 const PORT = process.env.PORT || 10000;
