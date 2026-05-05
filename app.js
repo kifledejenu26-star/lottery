@@ -5,9 +5,12 @@ const axios = require('axios');
 const path = require('path');
 const app = express();
 
-// --- 1. ኮንፊገሬሽን ---
-const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
+// ከላይ ካለው ኮንፊገሬሽን ስር ይሄን ተካው
+const dbURI = process.env.MONGODB_URI || 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 
+mongoose.connect(dbURI)
+    .then(() => console.log('MongoDB connected successfully!'))
+    .catch(err => console.error('MongoDB connection error:', err));
 const dbURI = 'mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority';
 mongoose.connect(dbURI).then(() => console.log('MongoDB connected!'));
 
