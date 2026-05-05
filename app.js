@@ -60,35 +60,38 @@ app.post('/buy', async (req, res) => {
             res.redirect(response.data.data.checkout_url);
         }
     } catch (err) {
-        if (err.response) {
-            console.error("Chapa Detailed Error:", err.response.data);
-            res.status(400).send(`Chapa Error: ${JSON.stringify(err.response.data)}`);
-        } else {
-            res.status(500).send("Server Error: " + err.message);
-        }
+        res.status(500).send("Chapa Error: " + err.message);
     }
 });
 
-// ክፍያ ሲሳካ Chapa በራሱ የሚጠራው መንገድ
 app.get('/verify-payment/:id', async (req, res) => {
     const tx_ref = req.params.id;
     try {
         const response = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
             headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
         });
-
-        if (response.data.status === 'success' || response.data.data.status === 'success') {
+        if (response.data.status === 'success') {
             await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' });
             res.render('success');
         }
-    } catch (err) { 
-        console.error("Verification Error:", err.message);
-        res.status(500).send("Verification Failed"); 
-    }
+    } catch (err) { res.status(500).send("Verification Failed"); }
+});
+
+// --- አውቶማቲክ ዕጣ ማውጫ መንገድ ---
+app.get('/pick-random-winner', async (req, res) => {
+    try {
+        const verifiedTickets = await Ticket.find({ status: 'Verified' });
+        if (verifiedTickets.length === 0) {
+            return res.send("<script>alert('ክፍያ የፈጸመ ሰው አልተገኘም!'); window.location.href='/admin?pass=israel2026';</script>");
+        }
+        const randomIndex = Math.floor(Math.random() * verifiedTickets.length);
+        const winner = verifiedTickets[randomIndex];
+        await Ticket.findByIdAndUpdate(winner._id, { status: 'Winner' });
+        res.send(`<script>alert('አሸናፊው ተመርጧል: ${winner.name}'); window.location.href='/admin?pass=israel2026';</script>`);
+    } catch (err) { res.status(500).send("Error"); }
 });
 
 app.get('/success', (req, res) => res.render('success'));
-
 app.get('/winner', async (req, res) => {
     try {
         const winners = await Ticket.find({ status: 'Winner' });
@@ -104,7 +107,6 @@ app.get('/admin', async (req, res) => {
     } else { res.send("Password Required"); }
 });
 
-// አሸናፊ መምረጫ (ወደ GET ቀይሬዋለሁ ለመጠቀም እንዲቀልህ)
 app.get('/make-winner/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
