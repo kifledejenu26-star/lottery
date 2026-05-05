@@ -14,6 +14,7 @@ mongoose.connect(dbURI).then(() => console.log('MongoDB connected!'));
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); // JSON መረጃዎችንም እንዲቀበል
 
 // --- 2. ዳታ ሞዴል ---
 const ticketSchema = new mongoose.Schema({
@@ -46,12 +47,16 @@ app.post('/buy', async (req, res) => {
             first_name: name,
             phone_number: cleanPhone,
             tx_ref: tx_ref,
+            // ማሳሰቢያ፡ Render ላይ ያለው ሊንክህ በትክክል ይሄ መሆኑን አረጋግጥ
             callback_url: "https://lottery-d43d.onrender.com/verify-payment/" + tx_ref,
             return_url: "https://lottery-d43d.onrender.com/success", 
             "customization[title]": "የሎተሪ ክፍያ",
             "customization[description]": `${prizeType} ቲኬት ቁጥር ${ticketNumber}`
         }, {
-            headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
+            headers: { 
+                Authorization: `Bearer ${CHAPA_SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            }
         });
 
         if (response.data.status === 'success') {
@@ -60,24 +65,32 @@ app.post('/buy', async (req, res) => {
             res.redirect(response.data.data.checkout_url);
         }
     } catch (err) {
-        res.status(500).send("Chapa Error: " + err.message);
+        console.error("Chapa Initialize Error:", err.response ? err.response.data : err.message);
+        res.status(500).send("ክፍያ ማስጀመር አልተቻለም።");
     }
 });
 
+// የክፍያ ማረጋገጫ መንገድ (የተሻሻለ)
 app.get('/verify-payment/:id', async (req, res) => {
     const tx_ref = req.params.id;
     try {
         const response = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
             headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
         });
-        if (response.data.status === 'success') {
+
+        // Chapa 'success' የሚለው በሁለት ቦታ ሊሆን ይችላል
+        if (response.data.status === 'success' && response.data.data.status === 'success') {
             await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' });
-            res.render('success');
+            return res.render('success');
+        } else {
+            return res.status(400).send("ክፍያው አልተሳካም ወይም አልተረጋገጠም።");
         }
-    } catch (err) { res.status(500).send("Verification Failed"); }
+    } catch (err) { 
+        console.error("Verification Error:", err.message);
+        res.status(500).send("Verification Failed"); 
+    }
 });
 
-// --- አውቶማቲክ ዕጣ ማውጫ መንገድ ---
 app.get('/pick-random-winner', async (req, res) => {
     try {
         const verifiedTickets = await Ticket.find({ status: 'Verified' });
@@ -88,15 +101,16 @@ app.get('/pick-random-winner', async (req, res) => {
         const winner = verifiedTickets[randomIndex];
         await Ticket.findByIdAndUpdate(winner._id, { status: 'Winner' });
         res.send(`<script>alert('አሸናፊው ተመርጧል: ${winner.name}'); window.location.href='/admin?pass=israel2026';</script>`);
-    } catch (err) { res.status(500).send("Error"); }
+    } catch (err) { res.status(500).send("Error picking winner"); }
 });
 
 app.get('/success', (req, res) => res.render('success'));
+
 app.get('/winner', async (req, res) => {
     try {
         const winners = await Ticket.find({ status: 'Winner' });
         res.render('winner', { winners });
-    } catch (err) { res.status(500).send("Error"); }
+    } catch (err) { res.status(500).send("Error fetching winners"); }
 });
 
 app.get('/admin', async (req, res) => {
@@ -111,7 +125,7 @@ app.get('/make-winner/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndUpdate(req.params.id, { status: 'Winner' });
         res.redirect('/admin?pass=israel2026');
-    } catch (err) { res.status(500).send("Error"); }
+    } catch (err) { res.status(500).send("Error making winner"); }
 });
 
 const PORT = process.env.PORT || 10000;
