@@ -1,63 +1,129 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const axios = require('axios');
 const path = require('path');
-// Infobip SDK እዚህ ጋር ገብቷል
-const { Infobip, AuthType } = require('@infobip-api-client/sdk');
+const { Infobip, AuthType } = require('@infobip-api-client/sdk'); 
 
 const app = express();
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('view engine', 'ejs');
+// --- 1. ኮንፊገሬሽን ---
+const INFOBIP_API_KEY = "d9aab6e1c252ed1226bfd82c94ab929f-60ef815d-7148-41e3-9fba-299c09c3d527";
+const INFOBIP_BASE_URL = "https://m9xgn9.api.infobip.com"; 
+const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
 
-// MongoDB Connection
-mongoose.connect('mongodb+srv://israel:yourpassword@cluster0.mongodb.net/lottery', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log('✅ MongoDB connected successfully!'))
-  .catch(err => console.log('❌ MongoDB connection error:', err));
-
-// Infobip Configuration
-// ማሳሰቢያ፡ እነዚህን መረጃዎች በራስህ የ Infobip መረጃዎች መተካት ትችላለህ
-let infobip = new Infobip({
-    baseUrl: "https://89m88n.api.infobip.com", // ያንተን Base URL እዚህ አስገባ
-    apiKey: "your_api_key_here",               // ያንተን API Key እዚህ አስገባ
+const infobip = new Infobip({
+    baseUrl: INFOBIP_BASE_URL,
+    apiKey: INFOBIP_API_KEY,
     authType: AuthType.ApiKey,
 });
 
-// Routes
-app.get('/', (req, res) => {
-    res.render('index');
+const dbURI = process.env.MONGODB_URI;
+mongoose.connect(dbURI)
+    .then(() => console.log('✅ MongoDB connected successfully!'))
+    .catch(err => console.error('❌ MongoDB connection error:', err.message));
+
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// --- 2. ዳታ ሞዴል ---
+const ticketSchema = new mongoose.Schema({
+    name: String,
+    phone: String,
+    ticketNumber: Number,
+    transactionId: String,
+    prizeType: String,
+    status: { type: String, default: 'Pending' },
+    date: { type: Date, default: Date.now }
 });
+const Ticket = mongoose.model('Ticket', ticketSchema);
 
-// ስልክ ቁጥር ተቀብሎ SMS የሚልክ Route
-app.post('/register', async (req, res) => {
-    const { phoneNumber } = req.body;
+// --- 3. መንገዶች (Routes) ---
+app.get('/', (req, res) => res.render('index'));
 
+app.post('/buy', async (req, res) => {
     try {
-        // SMS ለመላክ የሚደረግ ሙከራ
-        const response = await infobip.channels.sms.send({
-            messages: [
-                {
-                    from: "InfoSMS",
-                    destinations: [{ to: phoneNumber }],
-                    text: "እንኳን ደስ አለዎት! በሎተሪው በተሳካ ሁኔታ ተመዝግበዋል።",
-                },
-            ],
+        const { name, phone, prizeType } = req.body;
+        const cleanPhone = phone.replace(/\s+/g, '');
+        const ticketNumber = Math.floor(100000 + Math.random() * 900000);
+        let price = (prizeType === "መኪና") ? 50 : 100;
+        const tx_ref = `tx-${ticketNumber}-${Date.now()}`;
+
+        const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+            amount: price,
+            currency: 'ETB',
+            email: 'israel@gmail.com', 
+            first_name: name,
+            phone_number: cleanPhone,
+            tx_ref: tx_ref,
+            callback_url: "https://lottery-d43d.onrender.com/verify-payment/" + tx_ref,
+            return_url: "https://lottery-d43d.onrender.com/success", 
+            "customization[title]": "የሎተሪ ክፍያ",
+            "customization[description]": `${prizeType} ቲኬት ቁጥር ${ticketNumber}`
+        }, {
+            headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
         });
 
-        console.log('SMS Sent Successfully:', response.data);
-        res.render('success', { message: "ምዝገባው ተጠናቅቋል፣ የጽሁፍ መልዕክት በስልክዎ ይደርስዎታል።" });
-    } catch (error) {
-        console.error('SMS Sending Error:', error);
-        // SMS ባይላክም ተጠቃሚው መመዝገቡን እንዲያውቅ ለማድረግ
-        res.render('success', { message: "ምዝገባው ተጠናቅቋል (SMS መላክ ግን አልተቻለም)።" });
+        if (response.data.status === 'success') {
+            const newTicket = new Ticket({ name, phone: cleanPhone, ticketNumber, prizeType, transactionId: tx_ref });
+            await newTicket.save();
+            res.redirect(response.data.data.checkout_url);
+        }
+    } catch (err) {
+        res.status(500).send("Chapa Error: " + err.message);
     }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server started on port ${PORT}`);
+app.get('/success', async (req, res) => {
+    try {
+        const lastTicket = await Ticket.findOne().sort({ date: -1 });
+        res.send(`
+            <div style="text-align:center; margin-top:50px; font-family:sans-serif; border: 2px dashed #007bff; padding: 20px; display: inline-block;">
+                <h1 style="color:green; font-size: 50px;">✔️</h1>
+                <h1 style="color:#333;">ክፍያዎ ተሳክቷል!</h1>
+                <div style="background:#f4f4f4; padding:20px; border-radius:10px; text-align:left;">
+                   <p><strong>ስም፦</strong> ${lastTicket.name}</p>
+                   <p><strong>የትኬት ቁጥር፦</strong> <span style="font-size:22px; color:#007bff;">#${lastTicket.ticketNumber}</span></p>
+                   <p><strong>ሽልማት፦</strong> ${lastTicket.prizeType}</p>
+                </div>
+                <p style="color:blue; margin-top:15px;">የትኬት ቁጥሩ በ SMS ወደ ስልክዎ ይላካል!</p>
+                <br>
+                <a href="/" style="padding:10px 20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">ወደ ዋናው ገጽ ተመለስ</a>
+            </div>
+        `);
+    } catch (e) { res.redirect('/'); }
 });
+
+app.all('/verify-payment/:id', async (req, res) => {
+    const tx_ref = req.params.id;
+    try {
+        const response = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+            headers: { Authorization: `Bearer ${CHAPA_SECRET_KEY}` }
+        });
+
+        if (response.data.status === 'success' && response.data.data.status === 'success') {
+            const ticket = await Ticket.findOneAndUpdate({ transactionId: tx_ref }, { status: 'Verified' }, { new: true });
+            
+            if (ticket) {
+                try {
+                    await infobip.channels.sms.send({
+                        messages: [{
+                            from: "InfoSMS",
+                            destinations: [{ to: ticket.phone }],
+                            text: `ሰላም ${ticket.name}፣ የሎተሪ ትኬት ቁጥርዎ #${ticket.ticketNumber} ነው። መልካም ዕድል!`
+                        }]
+                    });
+                    console.log("✅ SMS sent to " + ticket.phone);
+                } catch (smsErr) {
+                    console.error("❌ SMS Error:", smsErr.message);
+                }
+            }
+            return res.status(200).send("Verified");
+        }
+    } catch (err) { res.status(500).send("Error"); }
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
