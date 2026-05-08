@@ -26,11 +26,12 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 3. Routes (መሰረታዊ መንገዶች)
+// 3. Routes
 app.get('/', (req, res) => res.render('index'));
 
-// 4. ሰርቨሩን ማስነሳት (Port Binding)
-// Render በራሱ የሚሰጠውን PORT እንዲጠቀም ይደረጋል
+// እዚህ ጋር የሎተሪ ሽያጭ እና SMS መላኪያ ኮድህ ይቀጥላል...
+
+// 4. ሰርቨሩን ማስነሳት (Port Binding ለ Render)
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT}`);
