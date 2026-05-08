@@ -5,9 +5,10 @@ const axios = require('axios');
 
 const app = express();
 
-// 1. ኮንፊገሬሽን
+// 1. ኮንፊገሬሽን (Configurations)
 const dbURI = "mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority";
 const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
+const ADMIN_PASSWORD = "israel2026"; // የአድሚን መግቢያ ኮድ
 
 mongoose.connect(dbURI)
     .then(() => console.log('✅ MongoDB connected!'))
@@ -33,8 +34,10 @@ const Ticket = mongoose.model('Ticket', ticketSchema);
 
 // 3. መንገዶች (Routes)
 
+// ዋና ገጽ
 app.get('/', (req, res) => res.render('index'));
 
+// ክፍያ መጀመሪያ
 app.post('/buy', async (req, res) => {
     try {
         const { name, phone, prizeType } = req.body;
@@ -63,16 +66,32 @@ app.post('/buy', async (req, res) => {
     } catch (err) { res.status(500).send("Error"); }
 });
 
+// ስኬታማ ክፍያ
 app.get('/success', async (req, res) => {
     try {
         const lastTicket = await Ticket.findOne().sort({ date: -1 });
-        res.render('success', { ticket: lastTicket }); 
+        res.send(`
+            <div style="text-align:center; padding:50px; font-family:sans-serif;">
+                <h1 style="color:green;">✔️ ክፍያዎ ተሳክቷል!</h1>
+                <div style="background:#f4f4f4; padding:20px; border-radius:10px; display:inline-block; text-align:left;">
+                    <p><strong>ስም፦</strong> ${lastTicket.name}</p>
+                    <p><strong>የሎተሪ ቁጥርዎ፦</strong> <span style="font-size:24px; color:#007bff;">#${lastTicket.ticketNumber}</span></p>
+                    <p><strong>ሽልማት፦</strong> ${lastTicket.prizeType}</p>
+                </div>
+                <p>እባክዎ ይህንን ገጽ ፎቶ አንስተው ያስቀምጡ!</p>
+                <br><a href="/">ተመለስ</a>
+            </div>
+        `);
     } catch (e) { res.redirect('/'); }
 });
 
-// --- አስተዳዳሪ (Admin) እና የእጣ ማውጫ ---
-
+// 4. የአስተዳዳሪ ገጽ (Admin with Password Protection)
 app.get('/admin', async (req, res) => {
+    const pass = req.query.pass;
+    if (pass !== ADMIN_PASSWORD) {
+        return res.status(403).send("<h1>Unauthorized: እባክዎ በትክክለኛው የአድሚን ሊንክ ይግቡ!</h1>");
+    }
+
     try {
         const allTickets = await Ticket.find().sort({ date: -1 });
         const carTickets = allTickets.filter(t => t.prizeType === "መኪና");
@@ -80,22 +99,22 @@ app.get('/admin', async (req, res) => {
 
         const createTable = (tickets, title, color, type) => `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px;">
-                <h3 style="color:${color};">📍 የ${title} ተመዝጋቢዎች (${tickets.length})</h3>
-                <form action="/draw-winner" method="POST">
+                <h3 style="color:${color}; border-left: 5px solid ${color}; padding-left:10px;">📍 የ${title} ተመዝጋቢዎች (${tickets.length})</h3>
+                <form action="/draw-winner?pass=${ADMIN_PASSWORD}" method="POST">
                     <input type="hidden" name="prizeType" value="${type}">
-                    <button type="submit" style="background:${color}; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">የ${title} እጣ አውጣ</button>
+                    <button type="submit" style="background:${color}; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">የ${title} እጣ አውጣ</button>
                 </form>
             </div>
             <table border="1" style="width:100%; border-collapse:collapse; margin-bottom:10px;">
                 <tr style="background:#f8f9fa;">
-                    <th>ስም</th> <th>ስልክ</th> <th>ቁጥር</th> <th>ሁኔታ</th> <th>አሸናፊ?</th>
+                    <th style="padding:10px;">ስም</th> <th style="padding:10px;">ስልክ</th> <th style="padding:10px;">ቁጥር</th> <th style="padding:10px;">ሁኔታ</th> <th style="padding:10px;">አሸናፊ?</th>
                 </tr>
                 ${tickets.map(t => `
                     <tr style="${t.isWinner ? 'background:#fff3cd;' : ''}">
                         <td style="padding:8px;">${t.name}</td>
                         <td style="padding:8px;">${t.phone}</td>
                         <td style="padding:8px; font-weight:bold;">#${t.ticketNumber}</td>
-                        <td style="padding:8px;">${t.status}</td>
+                        <td style="padding:8px; color:${t.status === 'Verified' ? 'green' : 'orange'};">${t.status}</td>
                         <td style="padding:8px; text-align:center;">${t.isWinner ? '🏆' : '-'}</td>
                     </tr>
                 `).join('')}
@@ -104,70 +123,68 @@ app.get('/admin', async (req, res) => {
 
         res.send(`
             <div style="font-family:sans-serif; padding:20px; max-width:1000px; margin:auto;">
-                <div style="display:flex; justify-content:space-between;">
-                    <h2>የአስተዳዳሪ መቆጣጠሪያ</h2>
-                    <a href="/winner" style="color:gold; font-weight:bold; background:#333; padding:10px; border-radius:5px; text-decoration:none;">የአሸናፊዎች ገጽ</a>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>የአስተዳዳሪ መቆጣጠሪያ (Admin Panel)</h2>
+                    <a href="/winner" style="background:#333; color:gold; padding:10px; border-radius:5px; text-decoration:none;">የአሸናፊዎች ገጽ</a>
                 </div>
                 <hr>
                 ${createTable(carTickets, "መኪና", "#e67e22", "መኪና")}
                 ${createTable(houseTickets, "ቤት", "#27ae60", "ቤት")}
             </div>
         `);
-    } catch (err) { res.send("Error"); }
+    } catch (err) { res.send("Error loading admin page"); }
 });
 
-// እጣ ማውጫ ተግባር (Random Selection)
+// እጣ ማውጫ (Winner Drawing)
 app.post('/draw-winner', async (req, res) => {
+    if (req.query.pass !== ADMIN_PASSWORD) return res.send("Unauthorized");
     try {
         const { prizeType } = req.body;
-        // ክፍያቸው የተረጋገጠ (Verified) ተመዝጋቢዎችን ብቻ መምረጥ
         const eligible = await Ticket.find({ prizeType: prizeType, status: 'Verified' });
         
         if (eligible.length > 0) {
-            // የድሮ አሸናፊዎችን አጥፋ (አዲስ እጣ ከሆነ)
             await Ticket.updateMany({ prizeType: prizeType }, { isWinner: false });
-            
-            // በዘፈቀደ አንዱን መምረጥ
             const winner = eligible[Math.floor(Math.random() * eligible.length)];
             winner.isWinner = true;
             await winner.save();
-            res.redirect('/admin');
+            res.redirect(`/admin?pass=${ADMIN_PASSWORD}`);
         } else {
-            res.send("<script>alert('ምንም የተከፈለበት ተመዝጋቢ የለም!'); window.location='/admin';</script>");
+            res.send("<script>alert('ምንም የተከፈለበት ተመዝጋቢ የለም!'); window.location='/admin?pass=israel2026';</script>");
         }
-    } catch (err) { res.redirect('/admin'); }
+    } catch (err) { res.redirect(`/admin?pass=${ADMIN_PASSWORD}`); }
 });
 
-// --- አሸናፊዎችን ለይቶ የሚያሳይ ገጽ ---
+// 5. የአሸናፊዎች ገጽ (Winner Page)
 app.get('/winner', async (req, res) => {
     try {
         const carWinner = await Ticket.findOne({ isWinner: true, prizeType: "መኪና" });
         const houseWinner = await Ticket.findOne({ isWinner: true, prizeType: "ቤት" });
 
         const winnerBox = (winner, title, color) => `
-            <div style="border:3px solid ${color}; padding:20px; border-radius:15px; margin:20px; width:300px; display:inline-block; background:white;">
-                <h2 style="color:${color};">${title} አሸናፊ</h2>
+            <div style="border:3px solid ${color}; padding:30px; border-radius:20px; margin:20px; width:280px; display:inline-block; background:white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <h2 style="color:${color}; text-transform:uppercase;">የ${title} ባለእድል</h2>
                 ${winner ? `
-                    <h1 style="margin:10px 0;">🏆</h1>
-                    <h3 style="margin:5px 0;">${winner.name}</h3>
-                    <h2 style="color:#007bff;">#${winner.ticketNumber}</h2>
-                    <p style="color:#666;">ስልክ: ${winner.phone.substring(0, 4)}****</p>
-                ` : `<p style="color:#999;">እጣው ገና አልወጣም</p>`}
+                    <h1 style="font-size:50px; margin:10px 0;">🏆</h1>
+                    <h3 style="margin:5px 0; color:#333;">${winner.name}</h3>
+                    <h2 style="color:#007bff; font-size:30px;">#${winner.ticketNumber}</h2>
+                    <p style="color:#777;">ስልክ: ${winner.phone.substring(0, 4)}****</p>
+                ` : `<p style="color:#999; font-style:italic; margin-top:20px;">እጣው ገና አልወጣም</p>`}
             </div>
         `;
 
         res.send(`
             <div style="text-align:center; font-family:sans-serif; background:#f0f2f5; min-height:100vh; padding:50px 20px;">
-                <h1 style="color:#333; font-size:40px;">🎊 የእለቱ ባለእድሎች 🎊</h1>
+                <h1 style="color:#333; font-size:45px; margin-bottom:10px;">🎊 የእለቱ አሸናፊዎች 🎊</h1>
+                <p style="color:#666; margin-bottom:40px;">እንኳን ደስ አላችሁ!</p>
                 <div style="display:flex; justify-content:center; flex-wrap:wrap;">
-                    ${winnerBox(carWinner, "የመኪና", "#e67e22")}
-                    ${winnerBox(houseWinner, "የቤት", "#27ae60")}
+                    ${winnerBox(carWinner, "መኪና", "#e67e22")}
+                    ${winnerBox(houseWinner, "ቤት", "#27ae60")}
                 </div>
                 <br><br>
-                <a href="/" style="text-decoration:none; background:#333; color:white; padding:12px 25px; border-radius:30px;">ወደ ዋናው ገጽ ተመለስ</a>
+                <a href="/" style="text-decoration:none; background:#333; color:white; padding:15px 35px; border-radius:50px; font-weight:bold;">ወደ ዋናው ገጽ ተመለስ</a>
             </div>
         `);
-    } catch (err) { res.send("Error"); }
+    } catch (err) { res.send("Error loading winners"); }
 });
 
 app.all('/verify-payment/:id', async (req, res) => {
@@ -178,4 +195,4 @@ app.all('/verify-payment/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server started on port ${PORT}`));
