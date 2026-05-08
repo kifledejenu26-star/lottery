@@ -117,3 +117,34 @@ app.get('/admin', async (req, res) => {
                 <br><a href="/">ወደ ዋና ገጽ</a>
             </div>
         `);
+    } catch (err) { res.send("Error"); }
+});
+
+// የአሸናፊዎች ገጽ
+app.get('/winner', async (req, res) => {
+    try {
+        const winners = await Ticket.find({ isWinner: true });
+        res.send(`
+            <div style="text-align:center; font-family:sans-serif; padding:50px;">
+                <h1 style="color:#d4af37;">🏆 የእለቱ አሸናፊዎች 🏆</h1>
+                <hr>
+                ${winners.length > 0 ? winners.map(w => `<h3>${w.name} - #${w.ticketNumber}</h3>`).join('') : "<h3>ገና አልተመረጠም!</h3>"}
+                <br><a href="/">ወደ ዋና ገጽ</a>
+            </div>
+        `);
+    } catch (err) { res.send("Error"); }
+});
+
+// የክፍያ ማረጋገጫ (Webhook)
+app.all('/verify-payment/:id', async (req, res) => {
+    try {
+        await Ticket.findOneAndUpdate({ transactionId: req.params.id }, { status: 'Verified' });
+        res.status(200).send("Verified");
+    } catch (err) { res.status(500).send("Error"); }
+});
+
+// 4. ሰርቨር ማስነሳት
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+});
