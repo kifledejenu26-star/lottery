@@ -7,10 +7,13 @@ const { Infobip, AuthType } = require('@infobip-api-client/sdk');
 
 const app = express();
 
-// --- 1. ኮንፊገሬሽን ---
+// --- 1. ኮንፊገሬሽን (Configurations) ---
 const INFOBIP_API_KEY = "d9aab6e1c252ed1226bfd82c94ab929f-60ef815d-7148-41e3-9fba-299c09c3d527";
 const INFOBIP_BASE_URL = "https://m9xgn9.api.infobip.com"; 
 const CHAPA_SECRET_KEY = 'CHASECK_TEST-9b6jscSvjH68fsL6QR0IJyCB0HoGSacz'; 
+
+// የሰጠኸኝ የ MongoDB ሊንክ እዚህ ገብቷል
+const dbURI = "mongodb+srv://israel_user:israel2026@cluster0.j2yp1l9.mongodb.net/lotteryDB?retryWrites=true&w=majority";
 
 const infobip = new Infobip({
     baseUrl: INFOBIP_BASE_URL,
@@ -18,7 +21,6 @@ const infobip = new Infobip({
     authType: AuthType.ApiKey,
 });
 
-const dbURI = process.env.MONGODB_URI;
 mongoose.connect(dbURI)
     .then(() => console.log('✅ MongoDB connected successfully!'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
@@ -28,7 +30,7 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// --- 2. ዳታ ሞዴል ---
+// --- 2. ዳታ ሞዴል (Data Model) ---
 const ticketSchema = new mongoose.Schema({
     name: String,
     phone: String,
@@ -72,7 +74,8 @@ app.post('/buy', async (req, res) => {
             res.redirect(response.data.data.checkout_url);
         }
     } catch (err) {
-        res.status(500).send("Chapa Error: " + err.message);
+        console.error("Chapa Error:", err.message);
+        res.status(500).send("የክፍያ ሲስተሙ ላይ ችግር አጋጥሟል፤ እባክዎ ቆይተው ይሞክሩ።");
     }
 });
 
@@ -115,14 +118,16 @@ app.all('/verify-payment/:id', async (req, res) => {
                             text: `ሰላም ${ticket.name}፣ የሎተሪ ትኬት ቁጥርዎ #${ticket.ticketNumber} ነው። መልካም ዕድል!`
                         }]
                     });
-                    console.log("✅ SMS sent to " + ticket.phone);
                 } catch (smsErr) {
-                    console.error("❌ SMS Error:", smsErr.message);
+                    console.error("❌ SMS Sending Failed:", smsErr.message);
                 }
             }
             return res.status(200).send("Verified");
         }
-    } catch (err) { res.status(500).send("Error"); }
+    } catch (err) { 
+        console.error("Verification Error:", err.message);
+        res.status(500).send("Error"); 
+    }
 });
 
 const PORT = process.env.PORT || 10000;
